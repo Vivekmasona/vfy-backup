@@ -7,8 +7,10 @@ const schedule = require('node-schedule');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Serve static files
-app.use(express.static('public'));
+// Serve the index.html file when the root URL is accessed
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 // Configure multer storage
 const storage = multer.diskStorage({
@@ -53,3 +55,4 @@ app.use('/uploads', express.static('uploads'));
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
+
