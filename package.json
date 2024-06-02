@@ -1,0 +1,16 @@
+{
+  "name": "audio-upload",
+  "version": "1.0.0",
+  "description": "A Node.js application to upload audio files and delete them after 1 hour",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "author": "vivek masona",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.17.3",
+    "multer": "^1.4.4",
+    "node-schedule": "^2.1.0"
+  }
+}
