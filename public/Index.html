@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Upload Control Panel</title>
+</head>
+<body>
+    <h1>Upload an Audio File</h1>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <input type="file" name="audio" accept="audio/*" required>
+        <button type="submit">Upload</button>
+    </form>
+    <h2>Uploaded Files</h2>
+    <ul id="fileList"></ul>
+    
+    <script>
+        document.getElementById('uploadForm').onsubmit = async (event) => {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const response = await fetch('/upload', {
+                method: 'POST',
+                body: formData
+            });
+            const result = await response.json();
+            if (response.ok) {
+                const fileList = document.getElementById('fileList');
+                const listItem = document.createElement('li');
+                const audioLink = document.createElement('a');
+                audioLink.href = result.url;
+                audioLink.textContent = result.url;
+                audioLink.target = '_blank';
+                listItem.appendChild(audioLink);
+                fileList.appendChild(listItem);
+            } else {
+                alert('File upload failed.');
+            }
+        };
+    </script>
+</body>
+</html>
