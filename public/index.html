@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Upload Control Panel</title>
+    <style>
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #f0f0f0;
+            margin-bottom: 10px;
+        }
+        .progress {
+            width: 0%;
+            height: 100%;
+            background-color: #4caf50;
+        }
+        .copy-button, .delete-button, .play-button {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin-top: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+        .copy-button:hover, .delete-button:hover, .play-button:hover {
+            background-color: #45a049;
+        }
+        .audio-item {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Upload an Audio File</h1>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <input type="file" name="audio" accept="audio/*" required>
+        <button type="submit">Upload</button>
+        <div class="progress-bar">
+            <div class="progress" id="uploadProgress"></div>
+        </div>
+    </form>
+    <h2>Uploaded Files</h2>
+    <ul id="fileList"></ul>
+    <div id="urlBox" style="display: none;">
+        <input type="text" id="audioUrl" readonly>
+        <button class="copy-button" id="copyButton">Copy URL</button>
+    </div>
+    
+    <script>
+        function deleteUrl(index) {
+            const storedUrls = JSON.parse(localStorage.getItem('audioUrls') || '[]');
+            storedUrls.splice(index, 1);
+            localStorage.setItem('audioUrls', JSON.stringify(storedUrls));
+            renderUrls();
+        }
+
+        function playAudio(url) {
+            const audio = new Audio(url);
+            audio.play();
+        }
+
+        function renderUrls() {
+            const storedUrls = JSON.parse(localStorage.getItem('audioUrls') || '[]');
+            const fileList = document.getElementById('fileList');
+            fileList.innerHTML = '';
+            storedUrls.forEach((url, index) => {
+                const listItem = document.createElement('li');
+                listItem.classList.add('audio-item');
+                const audioLink = document.createElement('a');
+                audioLink.href = url;
+                audioLink.textContent = url;
+                audioLink.target = '_blank';
+                listItem.appendChild(audioLink);
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = 'Delete';
+                deleteButton.classList.add('delete-button');
+                deleteButton.onclick = () => deleteUrl(index);
+                listItem.appendChild(deleteButton);
+                const copyButton = document.createElement('button');
+                copyButton.textContent = 'Copy';
+                copyButton.classList.add('copy-button');
+                copyButton.onclick = () => {
+                    const audioUrl = document.createElement('input');
+                    audioUrl.value = url;
+                    document.body.appendChild(audioUrl);
+                    audioUrl.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(audioUrl);
+                    alert('URL copied to clipboard!');
+                };
+                listItem.appendChild(copyButton);
+                const playButton = document.createElement('button');
+                playButton.textContent = 'Play';
+                playButton.classList.add('play-button');
+                playButton.onclick = () => playAudio(url);
+                listItem.appendChild(playButton);
+                fileList.appendChild(listItem);
+            });
+        }
+
+        document.getElementById('uploadForm').onsubmit = async (event) => {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const response = await fetch('/upload', {
+                method: 'POST',
+                body: formData,
+                onUploadProgress: progressEvent => {
+                    const progressBar = document.getElementById('uploadProgress');
+                    const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                    progressBar.style.width = percentCompleted + '%';
+                }
+            });
+            const result = await response.json();
+            if (response.ok) {
+                renderUrls();
+                document.getElementById('audioUrl').value = result.url;
+                document.getElementById('urlBox').style.display = 'block';
+                localStorage.setItem('audioUrls', JSON.stringify(JSON.parse(localStorage.getItem('audioUrls') || '[]').concat(result.url)));
+            } else {
+                alert('File upload failed.');
+            }
+        };
+
+        renderUrls();
+    </script>
+</body>
+</html>
