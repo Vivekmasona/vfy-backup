@@ -3,9 +3,13 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const schedule = require('node-schedule');
+const crypto = require('crypto');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// In-memory store for file codes
+const fileCodes = new Map();
 
 // Serve the index.html file when the root URL is accessed
 app.get('/', (req, res) => {
@@ -36,41 +40,33 @@ app.post('/upload', upload.single('audio'), (req, res) => {
     const filePath = path.join(__dirname, req.file.path);
     const fileUrl = `${req.protocol}://${req.get('host')}/${req.file.path}`;
 
+    // Generate a random code for the file
+    const fileCode = crypto.randomBytes(4).toString('hex');
+    fileCodes.set(fileCode, filePath);
+
     // Schedule file deletion after 1 hour
     const deleteDate = new Date(Date.now() + 3600000); // 1 hour from now
     schedule.scheduleJob(deleteDate, () => {
         if (fs.existsSync(filePath)) {
             fs.unlinkSync(filePath);
+            fileCodes.delete(fileCode);
             console.log(`Deleted file: ${filePath}`);
         }
     });
 
-    res.json({ url: fileUrl });
+    res.json({ url: `${req.protocol}://${req.get('host')}/play/${fileCode}` });
 });
 
-// Route to play latest uploaded audio file
-app.get('/play', (req, res) => {
-    // Get the latest file in the uploads directory
-    const uploadPath = path.join(__dirname, 'uploads', 'audio');
-    fs.readdir(uploadPath, (err, files) => {
-        if (err) {
-            console.error('Error reading directory:', err);
-            return res.status(500).send('Internal Server Error');
-        }
+// Route to play the audio file using the random code
+app.get('/play/:code', (req, res) => {
+    const fileCode = req.params.code;
+    const filePath = fileCodes.get(fileCode);
 
-        // Sort files by modification time
-        files.sort((a, b) => {
-            return fs.statSync(path.join(uploadPath, b)).mtime.getTime() -
-                   fs.statSync(path.join(uploadPath, a)).mtime.getTime();
-        });
+    if (!filePath) {
+        return res.status(404).send('File not found.');
+    }
 
-        // Get the latest file
-        const latestFile = files[0];
-        const filePath = path.join(uploadPath, latestFile);
-
-        // Serve the latest file for playback
-        res.sendFile(filePath);
-    });
+    res.sendFile(filePath);
 });
 
 // Route to get the URL of the latest uploaded audio file
@@ -90,7 +86,22 @@ app.get('/latest', (req, res) => {
 
         // Get the latest file
         const latestFile = files[0];
-        const fileUrl = `${req.protocol}://${req.get('host')}/uploads/audio/${latestFile}`;
+        const filePath = path.join(uploadPath, latestFile);
+
+        // Generate a random code for the latest file if not already generated
+        let fileCode;
+        for (const [code, path] of fileCodes.entries()) {
+            if (path === filePath) {
+                fileCode = code;
+                break;
+            }
+        }
+        if (!fileCode) {
+            fileCode = crypto.randomBytes(4).toString('hex');
+            fileCodes.set(fileCode, filePath);
+        }
+
+        const fileUrl = `${req.protocol}://${req.get('host')}/play/${fileCode}`;
 
         // Return the URL of the latest file
         res.json({ url: fileUrl });
@@ -101,3 +112,4 @@ app.get('/latest', (req, res) => {
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
+
