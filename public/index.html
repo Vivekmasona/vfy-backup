@@ -3,56 +3,90 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Audio Upload Control Panel</title>
     <style>
-        .progress-bar {
-            width: 100%;
-            height: 20px;
-            background-color: #f0f0f0;
-            margin-bottom: 10px;
+        body {
+            background-color: #333;
+            color: white;
+            font-family: Arial, sans-serif;
         }
-        .progress {
-            width: 0%;
-            height: 100%;
+        h1, h2 {
+            text-align: center;
+        }
+        #uploadForm {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px;
+        }
+        .file-input {
+            display: none;
+        }
+        .file-input-label {
+            display: inline-block;
+            padding: 10px 20px;
+            cursor: pointer;
             background-color: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            margin-bottom: 20px;
         }
-        .copy-button, .delete-button, .play-button {
+        .file-input-label:hover {
+            background-color: #45a049;
+        }
+        .upload-button {
             background-color: #4caf50;
             color: white;
             border: none;
             padding: 10px 20px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 16px;
-            margin-top: 10px;
             cursor: pointer;
             border-radius: 5px;
-            margin-right: 10px;
+            font-size: 16px;
         }
-        .copy-button:hover, .delete-button:hover, .play-button:hover {
+        .upload-button:hover {
             background-color: #45a049;
+        }
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-left-color: #ffffff;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin-top: 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
         .audio-item {
             margin-bottom: 10px;
         }
+        .button {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        .button:hover {
+            background-color: #45a049;
+        }
     </style>
 </head>
 <body>
-    <h1>Upload an Audio File</h1>
+    <h1>VFY AUDIO TO URL CONVERTER</h1>
     <form id="uploadForm" enctype="multipart/form-data">
-        <input type="file" name="audio" accept="audio/*" required>
-        <button type="submit">Upload</button>
-        <div class="progress-bar">
-            <div class="progress" id="uploadProgress"></div>
-        </div>
+        <label for="fileInput" class="file-input-label">Choose an Audio File</label>
+        <input type="file" id="fileInput" name="audio" accept="audio/*" class="file-input" required>
+        <button type="submit" class="upload-button">Upload</button>
+        <div id="spinner" class="spinner" style="display: none;"></div>
     </form>
     <h2>Uploaded Files</h2>
     <ul id="fileList"></ul>
-    <div id="urlBox" style="display: none;">
-        <input type="text" id="audioUrl" readonly>
-        <button class="copy-button" id="copyButton">Copy URL</button>
-    </div>
     
     <script>
         function deleteUrl(index) {
@@ -81,12 +115,12 @@
                 listItem.appendChild(audioLink);
                 const deleteButton = document.createElement('button');
                 deleteButton.textContent = 'Delete';
-                deleteButton.classList.add('delete-button');
+                deleteButton.classList.add('button');
                 deleteButton.onclick = () => deleteUrl(index);
                 listItem.appendChild(deleteButton);
                 const copyButton = document.createElement('button');
                 copyButton.textContent = 'Copy';
-                copyButton.classList.add('copy-button');
+                copyButton.classList.add('button');
                 copyButton.onclick = () => {
                     const audioUrl = document.createElement('input');
                     audioUrl.value = url;
@@ -99,7 +133,7 @@
                 listItem.appendChild(copyButton);
                 const playButton = document.createElement('button');
                 playButton.textContent = 'Play';
-                playButton.classList.add('play-button');
+                playButton.classList.add('button');
                 playButton.onclick = () => playAudio(url);
                 listItem.appendChild(playButton);
                 fileList.appendChild(listItem);
@@ -109,27 +143,27 @@
         document.getElementById('uploadForm').onsubmit = async (event) => {
             event.preventDefault();
             const formData = new FormData(event.target);
+            document.getElementById('spinner').style.display = 'block';
             const response = await fetch('/upload', {
                 method: 'POST',
-                body: formData,
-                onUploadProgress: progressEvent => {
-                    const progressBar = document.getElementById('uploadProgress');
-                    const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-                    progressBar.style.width = percentCompleted + '%';
-                }
+                body: formData
             });
+            document.getElementById('spinner').style.display = 'none';
             const result = await response.json();
             if (response.ok) {
                 renderUrls();
-                document.getElementById('audioUrl').value = result.url;
-                document.getElementById('urlBox').style.display = 'block';
                 localStorage.setItem('audioUrls', JSON.stringify(JSON.parse(localStorage.getItem('audioUrls') || '[]').concat(result.url)));
             } else {
                 alert('File upload failed.');
             }
         };
 
+        document.querySelector('.file-input-label').onclick = () => {
+            document.getElementById('fileInput').click();
+        };
+
         renderUrls();
     </script>
 </body>
 </html>
+
