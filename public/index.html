@@ -25,17 +25,17 @@
             display: inline-block;
             padding: 10px 20px;
             cursor: pointer;
-            background-color: #4caf50;
+            background-color: #E84C3D;
             color: white;
             border: none;
             border-radius: 5px;
             margin-bottom: 20px;
         }
         .file-input-label:hover {
-            background-color: #45a049;
+            background-color: #c23b2c;
         }
         .upload-button {
-            background-color: #4caf50;
+            background-color: #E84C3D;
             color: white;
             border: none;
             padding: 10px 20px;
@@ -44,7 +44,7 @@
             font-size: 16px;
         }
         .upload-button:hover {
-            background-color: #45a049;
+            background-color: #c23b2c;
         }
         .spinner {
             border: 4px solid rgba(255, 255, 255, 0.3);
@@ -63,7 +63,7 @@
             margin-bottom: 10px;
         }
         .button {
-            background-color: #4caf50;
+            background-color: #E84C3D;
             color: white;
             border: none;
             padding: 10px 20px;
@@ -73,15 +73,21 @@
             margin-right: 10px;
         }
         .button:hover {
-            background-color: #45a049;
+            background-color: #c23b2c;
+        }
+        .file-name {
+            margin-bottom: 10px;
+            font-size: 16px;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
-    <h1>VFY AUDIO TO URL CONVERTER</h1>
+    <h1>Audio File To Vfy</h1>
     <form id="uploadForm" enctype="multipart/form-data">
         <label for="fileInput" class="file-input-label">Choose an Audio File</label>
         <input type="file" id="fileInput" name="audio" accept="audio/*" class="file-input" required>
+        <div id="fileName" class="file-name"></div>
         <button type="submit" class="upload-button">Upload</button>
         <div id="spinner" class="spinner" style="display: none;"></div>
     </form>
@@ -112,6 +118,7 @@
                 audioLink.href = url;
                 audioLink.textContent = url;
                 audioLink.target = '_blank';
+                audioLink.style.color = '#fff';
                 listItem.appendChild(audioLink);
                 const deleteButton = document.createElement('button');
                 deleteButton.textContent = 'Delete';
@@ -156,6 +163,11 @@
             } else {
                 alert('File upload failed.');
             }
+        };
+
+        document.getElementById('fileInput').onchange = (event) => {
+            const fileName = event.target.files[0].name;
+            document.getElementById('fileName').textContent = `Selected File: ${fileName}`;
         };
 
         document.querySelector('.file-input-label').onclick = () => {
