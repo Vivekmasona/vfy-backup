@@ -54,16 +54,28 @@ app.post('/upload', upload.single('audio'), (req, res) => {
         }
     });
 
-    res.json({ url: `${req.protocol}://${req.get('host')}/vivekmasona/${fileCode}.mp3` });
+    res.json({ url: `${req.protocol}://${req.get('host')}/dev-vivek-masona/${fileCode}.mp3` });
 });
 
 // Route to play the audio file using the random code
-app.get('/vivekmasona/:code', (req, res) => {
-    const fileCode = req.params.code;
+app.get('/dev-vivek-masona/:code', (req, res) => {
+    let fileCode = req.params.code;
+    const isMp3Requested = fileCode.endsWith('.mp3');
+    
+    // Remove ".mp3" from file code if present
+    if (isMp3Requested) {
+        fileCode = fileCode.slice(0, -4);
+    }
+
     const filePath = fileCodes.get(fileCode);
 
     if (!filePath) {
         return res.status(404).send('File not found.');
+    }
+
+    // If ".mp3" was requested, redirect to the correct URL
+    if (isMp3Requested) {
+        return res.redirect(`${req.protocol}://${req.get('host')}/dev-vivek-masona/${fileCode}`);
     }
 
     res.sendFile(filePath);
@@ -101,7 +113,7 @@ app.get('/latest', (req, res) => {
             fileCodes.set(fileCode, filePath);
         }
 
-        const fileUrl = `${req.protocol}://${req.get('host')}/vivekmasona/${fileCode}.mp3`;
+        const fileUrl = `${req.protocol}://${req.get('host')}/dev-vivek-masona/${fileCode}`;
 
         // Return the URL of the latest file
         res.json({ url: fileUrl });
