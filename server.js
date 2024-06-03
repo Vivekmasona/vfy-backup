@@ -54,11 +54,11 @@ app.post('/upload', upload.single('audio'), (req, res) => {
         }
     });
 
-    res.json({ url: `${req.protocol}://${req.get('host')}/vivek-masona/${fileCode}` });
+    res.json({ url: `${req.protocol}://${req.get('host')}/vivekmasona/${fileCode}.mp3` });
 });
 
 // Route to play the audio file using the random code
-app.get('/vivek-masona/:code', (req, res) => {
+app.get('/vivekmasona/:code', (req, res) => {
     const fileCode = req.params.code;
     const filePath = fileCodes.get(fileCode);
 
@@ -101,7 +101,7 @@ app.get('/latest', (req, res) => {
             fileCodes.set(fileCode, filePath);
         }
 
-        const fileUrl = `${req.protocol}://${req.get('host')}/vivek-masona/${fileCode}`;
+        const fileUrl = `${req.protocol}://${req.get('host')}/vivekmasona/${fileCode}.mp3`;
 
         // Return the URL of the latest file
         res.json({ url: fileUrl });
