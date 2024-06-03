@@ -19,7 +19,7 @@ app.get('/', (req, res) => {
 // Configure multer storage
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        const uploadPath = 'uploads/audio';
+        const uploadPath = 'vivek/masona';
         fs.mkdirSync(uploadPath, { recursive: true });
         cb(null, uploadPath);
     },
