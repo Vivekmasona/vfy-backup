@@ -83,7 +83,7 @@ app.get('/developer/vivek/masona/:code', (req, res) => {
 
 // Route to get the URL of the latest uploaded audio file
 app.get('/latest', (req, res) => {
-    const uploadPath = path.join(__dirname, 'uploads', 'audio');
+    const uploadPath = path.join(__dirname, 'vivek', 'masona');
     fs.readdir(uploadPath, (err, files) => {
         if (err) {
             console.error('Error reading directory:', err);
@@ -113,7 +113,7 @@ app.get('/latest', (req, res) => {
             fileCodes.set(fileCode, filePath);
         }
 
-        const fileUrl = `${req.protocol}://${req.get('host')}/developer/vivek/masona/${fileCode}`;
+        const fileUrl = `${req.protocol}://${req.get('host')}/developer/vivek/masona/${fileCode}.mp3`;
 
         // Return the URL of the latest file
         res.json({ url: fileUrl });
